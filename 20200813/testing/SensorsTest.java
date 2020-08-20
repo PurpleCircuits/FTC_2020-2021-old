@@ -1,9 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 /**
  * Most of this code was copied from the FTC examples, but we tweaked it for our purposes.
@@ -20,6 +26,7 @@ public class SensorsTest extends LinearOpMode {
     // Declare hardware
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
+    BNO055IMU imu;
 
     // Used for determining how long something has ran
     private ElapsedTime runtime = new ElapsedTime();
@@ -76,17 +83,22 @@ public class SensorsTest extends LinearOpMode {
         leftDrive.setPower(0);
         rightDrive.setPower(0);
     }
-    /*public void turnLeft(doubleturnAngle, doubletimeoutS) {
+    public void turnLeft(double turnAngle, double timeoutS) {
         sleep(500);
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        doublespeed=.5;
-        doubleoldDegreesLeft=turnAngle;
-        doublescaledSpeed=speed;
-        doubletargetHeading=angles.firstAngle+turnAngle;
-        doubleoldAngle=angles.firstAngle;
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        double speed=.5;
+        double oldDegreesLeft=turnAngle;
+        double scaledSpeed=speed;
+        double targetHeading=angles.firstAngle+turnAngle;
+        double oldAngle=angles.firstAngle;
         if(targetHeading<-180) {targetHeading+=360;}
         if(targetHeading>180){targetHeading-=360;}
-        doubledegreesLeft = ((int)(Math.signum(angles.firstAngle-targetHeading)+1)/2)*(360-Math.abs(angles.firstAngle-targetHeading))+(int)(Math.signum(targetHeading-angles.firstAngle)+1)/2*Math.abs(angles.firstAngle-targetHeading);
+        double degreesLeft =
+                ((int)(Math.signum(angles.firstAngle-targetHeading)+1)/2)
+                        *(360-Math.abs(angles.firstAngle-targetHeading))
+                        +
+                        (int)(Math.signum(targetHeading-angles.firstAngle)+1)
+                                /2*Math.abs(angles.firstAngle-targetHeading);
         runtime.reset();
         while(opModeIsActive() &&
                 runtime.seconds() < timeoutS &&
@@ -94,20 +106,21 @@ public class SensorsTest extends LinearOpMode {
                 oldDegreesLeft-degreesLeft>=0) { //check to see if we overshot target
             scaledSpeed=degreesLeft/(100+degreesLeft)*speed;
             if(scaledSpeed>1){scaledSpeed=.1;}
-            robot.leftBack.setPower(scaledSpeed*1.3); //extra power to back wheels
-            robot.rightBack.setPower(-1*scaledSpeed*1.3); //due to extra weight
-            robot.leftFront.setPower(scaledSpeed);
-            robot.rightFront.setPower(-1*scaledSpeed);
+
+            leftDrive.setPower(scaledSpeed*1.3); //extra power to back wheels
+            rightDrive.setPower(-1*scaledSpeed*1.3); //due to extra weight
+            //robot.leftFront.setPower(scaledSpeed);
+            //robot.rightFront.setPower(-1*scaledSpeed);
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             oldDegreesLeft=degreesLeft;
             degreesLeft = ((int)(Math.signum(angles.firstAngle-targetHeading)+1)/2)*(360-Math.abs(angles.firstAngle-targetHeading))+(int)(Math.signum(targetHeading-angles.firstAngle)+1)/2*Math.abs(angles.firstAngle-targetHeading);
-            if(Math.abs(angles.firstAngle-oldAngle)<1){speed*=1.1;}. //bump up speed to wheels in case robot stalls before reaching target
+            if(Math.abs(angles.firstAngle-oldAngle)<1){speed*=1.1;} //bump up speed to wheels in case robot stalls before reaching target
             oldAngle=angles.firstAngle;
         }
         sleep(250); //small pause at end of turn
     }
-    */
-     */
+
+
     /**
      * A simple method used to turn our robot.
      *
@@ -148,6 +161,14 @@ public class SensorsTest extends LinearOpMode {
         // Ensure to not run with encoder
         leftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+
+        // We are expecting the IMU to be attached to an I2C port on a Core Device Interface Module and named "imu".
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.loggingEnabled = true;
+        parameters.loggingTag     = "IMU";
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
 
         // Log that init hardware is finished
         telemetry.log().clear();
